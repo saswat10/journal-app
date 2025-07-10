@@ -35,17 +35,17 @@ public class JournalEntryController {
     @GetMapping("/{username}")
     public ResponseEntity<?> getUserEntries(@PathVariable String username) {
         User user = userService.findByUsername(username);
-        if(user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         List<JournalEntry> journalEntries = user.getJournalEntries();
-        if(journalEntries != null && !journalEntries.isEmpty()) {
+        if (journalEntries != null && !journalEntries.isEmpty()) {
             return new ResponseEntity<>(journalEntries, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PostMapping
-    public ResponseEntity<?> createEntry(@RequestBody JournalEntry myEntry) {
-        journalEntryService.saveEntry(myEntry);
+    @PostMapping("/{username}")
+    public ResponseEntity<?> createEntry(@RequestBody JournalEntry myEntry, @PathVariable String username) {
+        journalEntryService.saveEntry(myEntry, username);
         return new ResponseEntity<>(myEntry, HttpStatus.CREATED);
     }
 
@@ -58,11 +58,11 @@ public class JournalEntryController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @DeleteMapping("/id/{myId}")
-    public ResponseEntity<?> deleteById(@PathVariable ObjectId myId) {
+    @DeleteMapping("/id/{username}/{myId}")
+    public ResponseEntity<?> deleteById(@PathVariable ObjectId myId, @PathVariable String username) {
         Optional<JournalEntry> journalEntry = journalEntryService.getById(myId);
         if (journalEntry.isPresent()) {
-            journalEntryService.deleteById(myId);
+            journalEntryService.deleteById(myId, username);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
@@ -70,7 +70,11 @@ public class JournalEntryController {
     }
 
     @PutMapping("/id/{myId}")
-    public ResponseEntity<?> updateById(@PathVariable ObjectId myId, @RequestBody JournalEntry myEntry) {
+    public ResponseEntity<?> updateById(
+            @PathVariable ObjectId myId,
+            @RequestBody JournalEntry myEntry,
+            @PathVariable String username
+    ) {
         JournalEntry oldEntry = journalEntryService.getById(myId).orElse(null);
         if (oldEntry != null) {
             oldEntry.setTitle(myEntry.getTitle() != null && !myEntry.getTitle().isEmpty() ? myEntry.getTitle() : oldEntry.getTitle());
